@@ -1,0 +1,409 @@
+{
+  "name": "Linkedin Post Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"who is Leo Messi?\",\n  \"auto_parameters\": false,\n  \"topic\": \"general\",\n  \"search_depth\": \"basic\",\n  \"chunks_per_source\": 3,\n  \"max_results\": 1,\n  \"time_range\": null,\n  \"days\": 7,\n  \"include_answer\": true,\n  \"include_raw_content\": true,\n  \"include_images\": false,\n  \"include_image_descriptions\": false,\n  \"include_favicon\": false,\n  \"include_domains\": [],\n  \"exclude_domains\": [],\n  \"country\": null\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        160
+      ],
+      "id": "8a55fa9f-637e-478d-beac-5873dde8be47",
+      "name": "Tavily Search"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=LinedIn post: \n{{ $json.output }}",
+        "options": {
+          "systemMessage": "=# Overview\nYou are an Al agent that transforms LinkedIn posts into visual prompt descriptions for generating graphic marketing materials. These visuals are designed to be paired with the post on Linkedin, helping communicate the message in a visually engaging, brand-aligned way.\n\n## Objective:\n\n- Read and analyze the given LinkedIn post.\n- Identify the main message, insight, or takeaway from the post.\n- Create a clear and compelling graphic prompt that can be used with a text-to-image generator.\n- The result should be a marketing-style graphic not a literal scene or hyperrealistic photo - that:\n1) Visually supports or illustrates the key idea of the post\n2) Looks appropriate for use in a professional LinkedIn feed\n3) Feels polished, modern, and engaging\n\n## Output Instructions:\n- Output only the final image prompt. Do not output quotation marks.\n- Do not repeat or rephrase the LinkedIn post.\n- Do not add any explanations or extra content just the image prompt.\n- Never Leave things blank like \"Header area reserved for customizable callout text\"\n- Output numeric stats when available in the original post\n\n## Style Guidelines:\n\n- Think like a brand designer or marketing creative.\n- Visuals may include: text, charts, icons, abstract shapes, overlays, modern illustrations, motion-like effects, bold typography elements (described, not rendered), or metaphorical concepts.\n- You can mention layout suggestions (e.g., \"split screen design,\" \"header with bold title and subtle background illustration\").\n- Assume the output will be generated using AI image tools - your prompt should guide those tools effectively.\n\n## Example Prompt Format:\nA modern flat-style graphic showing a human brain connected to mechanical gears, representing the fusion of AI and automation. Minimalist background, soft gradients, clean sans-serif text placement space at the top."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        576,
+        0
+      ],
+      "id": "3796083e-4fb6-4bb3-8381-0ec47c31cb04",
+      "name": "Image prompt generator"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Topic of Post: {{ $json['Topic of Post'] }}\n\nTarget Audiance: {{ $json['Target Audiance'] }}",
+        "options": {
+          "systemMessage": "=# Overview\nYou are an Al agent specialized in creating professional, educational, and engaging LinkedIn posts based on any topic provided by the user.\n\n## Objectives:\nAlways begin by conducting a real-time search using the Tavily tool to gather the most accurate, up-to-date information on the topic. The post should be written to appeal to the provided target audience.\n\nBased on your research, generate a well-structured LinkedIn post that:\n- Starts with an engaging hook\n- Professional in tone\n- Clear and easy to read\n- Educational and insightful\n- Light on emojis (use only when highly relevant and minimal)\n- Includes proper source attribution (e.g., \"according to [source]\")\n- Contains relevant hashtags to improve visibility\n- Ends with a clear call to action (e.g., asking for thoughts, feedback, or shares)\n\n## Output Instructions:\n- Your ONLY output should be the final LinkedIn post text.\n- Do not include explanations, notes, or anything beyond the post itself.\n\n## Example Workflow:\n\n1) Receive a topic (e.g., \"The ROI of warehouse automation\")\n2) Use Tavily to search and gather recent information or case studies\n3) Draft a LinkedIn post using that research\n4) Format it with source citations, clean structure, optional hashtags, and a call to action"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "bc536b60-170c-450d-946c-f72209bedca2",
+      "name": "Post content Generator"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        -224
+      ],
+      "id": "deda279d-406d-45aa-bb8a-dee22367af68",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "yxMUncn4qBkCQ2Kb",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Generate LinkedIn Post:\n## Input:\n## 1. Topic of Post\n## 2. Target audience\n\n## **Create Post Content:**\n### Create post content using OpenAI Chat Model\n\n## **Generate Image Prompt:**\n### Generate image prompt for given Post content using same model.\n\n## **Generetate Image:**\n### Generate image using Image Generation model.\n\n## Conver image into Binary and Post on LinkedIn:\n",
+        "height": 560,
+        "width": 640
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -816,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "ffc7f5f6-464a-45ed-8031-0af4b6de4f74",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "predictions[0].bytesBase64Encoded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        336,
+        368
+      ],
+      "id": "0f003ac2-a62f-4864-894c-6deae6009401",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://us-central1-aiplatform.googleapis.com/v1/projects/n8n-imagen-workflow/locations/us-central1/publishers/google/models/imagen-4.0-ultra-generate-preview-06-06:predict",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ya29.c.c0ASRK0GaOAQDnjsqIHWlOkKUXDzXuoV43Ydz1OGkktVIAlznsXUXOA6LuPRI9VCvjCbzx2Y3T85l-ClUPbmqG5jxCnyhifD5XW3Qd3RXioyuCgpWZ2t0BTCkYu3qT9_eN7r252V8eITBi2KPZBBWY1yUdymTc-vyCLMDuSvPngF-IrBIzqj0x81ToPNE1RMmB46B0nqUboPX3tImNyfepqNeLb7cld_PnpL77Cu2eURP-44o8uZzEp_L8irC0R92IBxfBDzhDpp8k9arGMfZet8zBgvKRXfTXVOnWV5Ye3YJwpmAUHTBPJ7kVbNHbMkcTELAGIqmcjBW7HXjrefHVwWikeOOzFIyJcjbKWPhpUtezR8h31fxRK3ATagUZQytWundU-AT399CU1xlbQsgRxSV9yuha9YoZ2FV65QWeoJ1_dszXmq8UFI8BOpO1oBpuxJy9ByMMUFR3Oml-_7f5osRR8J7tk9-18IMQQ8qbn7ogs-fRBX21U44wafW32e7qJtkjyUu37b9X6QshWXky6_oZkxi48J9JUt3Bzx8h58_te3lS9mOF_pFrqY0b5qwUM4j8su3dWY3Ud3cx2ts4VX92W5pg2kUJvy1vjpY9gmM4icO63oUe_k7jW3Ye5M54mMq-W1vgfZvYbwY6zIXYs1oRmzm6M469In4t3cm3Xh8drBXenvouX4Q6cV67fObixpt7Mldmmxg8y_sy10nxmYsOU8USfo8s31IkswFvacOk43qFSmmXlFZReMXF9e6g_8W9-j9omUXc2cprtv0niSr4Mrc1nJhdsyiz3stZR3hJxI5WgQyM9rr4iZ4d0B7ezSw23f2hh8Xe2RMrw3b429mxs0uyyiM8dR5FjlBqYuO5d-B08jR7iUY0YsFasz0YdOpgfiJdavlrggJ48_tivJ6BO4lopsejxuJBOeqs9IzebdlB7vZF6owamYMYqUzgijh6-JtFmn5pYjyXO3zaidoQcMOJ40gSZr3-Y2s0Q2nuXdzbB1FMtgk"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"instances\": [\n    {\n      \"prompt\": {{ JSON.stringify($json.output) }} \n    }\n  ],\n  \"parameters\": {\n    \"sampleCount\": 1,\n    \"enhancePrompt\": false,\n    \"output_format\": \"jpeg\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        16,
+        368
+      ],
+      "id": "f81bfd73-5511-4f0b-87ad-928519672f1d",
+      "name": "Generate Image"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Post Details').item.json.Email }}",
+        "subject": "={{ $('Post Details').item.json['Topic of Post'] }}",
+        "emailType": "text",
+        "message": "={{ $('Post content Generator').item.json.output }}",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        640,
+        368
+      ],
+      "id": "3502dbbf-74d6-4f4d-b943-89b0fbfbe333",
+      "name": "Send a message",
+      "webhookId": "8f606e11-a111-454f-8199-28bc0d32fe01",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wMmr3pPxKTmok5ll",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### Input Details about Post:",
+        "height": 272,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -64,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "d81cf82d-911a-4325-9ab3-b12be7ed550f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "formTitle": "Linkedin Post Form",
+        "formDescription": "Enter the Target audiance to create a new LinkedIn post according to target adudiance.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Topic of Post",
+              "placeholder": "Unemployment in B Tech students",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Target Audiance",
+              "placeholder": "e.g. Unemployed youth",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "placeholder": "e.g sample@example.com",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ad38647b-0850-4630-b6f5-de2bc30ad66b",
+      "name": "Post Details",
+      "webhookId": "aeb2c52b-7806-402d-a22f-fe3c5baa9d4f"
+    },
+    {
+      "parameters": {
+        "content": "### Create Post Text:",
+        "height": 272,
+        "width": 320,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        192,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "99bffdb8-1230-432c-9ffa-ab8b416e65b7",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "### Create Image Prompt:",
+        "height": 272,
+        "width": 336,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        528,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "b4a1079f-6f30-4878-90c7-6fd1a9074dc3",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "### Generate Image using Imagen 3 (Binary form):",
+        "height": 240,
+        "width": 288,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -64,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "f616289b-761f-4cc0-a3ad-381782f8338a",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "### Convert Binary to JSON:",
+        "height": 240,
+        "width": 288,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        240,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "aece374a-7747-42dd-aa74-7254426f652f",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "### Generate Image using Imagen 3:",
+        "height": 240,
+        "width": 320,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        544,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "f99495c6-c99f-4bc0-882f-e6396c0bf63f",
+      "name": "Sticky Note6"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Tavily Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "Post content Generator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post content Generator": {
+      "main": [
+        [
+          {
+            "node": "Image prompt generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Post content Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Image prompt generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image prompt generator": {
+      "main": [
+        [
+          {
+            "node": "Generate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Details": {
+      "main": [
+        [
+          {
+            "node": "Post content Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8e87777c-cb48-434f-950b-f619fe5d8071",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ed3221c36f99872c4aadb91e7cc21cd0f35098599d0a15956d57ba01e754d646"
+  },
+  "id": "KENTvUzvdvaRc7rT",
+  "tags": []
+}
